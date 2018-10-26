@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"testing"
 
 	"github.com/leanovate/gopter"
 )
 
-func checkConditionFunc(check interface{}, numArgs int) (func([]reflect.Value) *gopter.PropResult, error) {
+func checkConditionFunc(check interface{}, numArgs int) (func([]reflect.Value) func(*testing.T), error) {
 	checkVal := reflect.ValueOf(check)
 	checkType := checkVal.Type()
 
