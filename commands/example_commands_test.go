@@ -1,6 +1,8 @@
 package commands_test
 
 import (
+	"testing"
+
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/commands"
 	"github.com/leanovate/gopter/gen"
@@ -113,13 +115,38 @@ func Example_buggyCounter() {
 
 	properties.Property("buggy counter", commands.Prop(buggyCounterCommands))
 
-	// When using testing.T you might just use: properties.TestingRun(t)
-	properties.Run(gopter.ConsoleReporter(false))
+	// When using testing.T you might just use: properties.RunT(t)
+	testing.Main(
+		func(a, b string) (bool, error) { return true, nil },
+		[]testing.InternalTest{
+			{
+				Name: "Example_buggyCounter",
+				F:    properties.RunT,
+			},
+		}, nil, nil)
 	// Output:
-	// ! buggy counter: Falsified after 43 passed tests.
-	// ARG_0: initialState=0 sequential=[INC INC INC INC DEC GET]
-	// ARG_0_ORIGINAL (8 shrinks): initialState=0 sequential=[RESET GET GET GET
-	//    RESET DEC DEC INC INC RESET RESET DEC INC RESET INC INC GET INC INC DEC
-	//    DEC GET RESET INC INC DEC INC INC INC RESET RESET INC INC GET INC DEC GET
-	//    DEC GET INC RESET INC INC]
+	//
+	// --- FAIL: Example_buggyCounter (0.04s)
+	// 	--- FAIL: Example_buggyCounter/buggy_counter (0.04s)
+	// 		--- FAIL: Example_buggyCounter/buggy_counter/shrink_0#02 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=0 sequential=[RESET GET GET GET RESET DEC DEC INC INC RESET RESET DEC INC RESET INC INC GET INC INC DEC DEC GET RESET INC INC DEC INC INC INC RESET RESET INC INC GET INC DEC GET DEC GET INC RESET INC]
+	// 		--- FAIL: Example_buggyCounter/buggy_counter/shrink_0#05 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=0 sequential=[RESET DEC INC RESET INC INC GET INC INC DEC DEC GET RESET INC INC DEC INC INC INC RESET RESET INC INC GET INC DEC GET DEC GET INC RESET INC]
+	// 		--- FAIL: Example_buggyCounter/buggy_counter/shrink_0#07 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=0 sequential=[RESET DEC INC RESET INC INC GET INC INC DEC DEC GET RESET INC INC DEC]
+	// 		--- FAIL: Example_buggyCounter/buggy_counter/shrink_0#10 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=0 sequential=[INC INC GET INC INC DEC DEC GET RESET INC INC DEC]
+	// 		--- FAIL: Example_buggyCounter/buggy_counter/shrink_0#16 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=0 sequential=[INC INC GET INC INC DEC DEC GET RESET]
+	// 		--- FAIL: Example_buggyCounter/buggy_counter/shrink_0#19 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=0 sequential=[INC INC GET INC INC DEC DEC GET]
+	// 		--- FAIL: Example_buggyCounter/buggy_counter/shrink_0#28 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=0 sequential=[INC INC INC INC DEC DEC GET]
+	// 		--- FAIL: Example_buggyCounter/buggy_counter/shrink_0#36 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=0 sequential=[INC INC INC INC DEC GET]
+	// 		--- FAIL: Example_buggyCounter/buggy_counter/original#43 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=0 sequential=[RESET GET GET GET RESET DEC DEC INC INC RESET RESET DEC INC RESET INC INC GET INC INC DEC DEC GET RESET INC INC DEC INC INC INC RESET RESET INC INC GET INC DEC GET DEC GET INC RESET INC INC]
+	// 		forall.go:64: Falsified after 43 passed tests.
+	// 		runner.go:72: Completed with seed: 1541773293983924107
+	// FAIL
 }

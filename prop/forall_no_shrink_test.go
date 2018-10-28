@@ -1,54 +1,37 @@
+// +build !fail
+
 package prop_test
 
 import (
+	"fmt"
+	"regexp"
+	"os/exec"
 	"testing"
-
-	"github.com/leanovate/gopter"
-	"github.com/leanovate/gopter/gen"
-	"github.com/leanovate/gopter/prop"
 )
 
-func TestForAllNoShrink(t *testing.T) {
-	parameters := gopter.DefaultTestParameters()
-	simpleForAll := prop.ForAllNoShrink1(
-		gen.Const("const value"),
-		func(value interface{}) (interface{}, error) {
-			return value.(string) == "const value", nil
-		},
-	)
-
-	simpleResult := simpleForAll.Check(parameters)
-
-	if simpleResult.Status != gopter.TestPassed || simpleResult.Succeeded != parameters.MinSuccessfulTests {
-		t.Errorf("Invalid simpleResult: %#v", simpleResult)
+func GoTestOutput(t testing.TB, result string) []byte {
+	cmd := exec.Command("go", "test", "-v", "-tags=fail", "-run", t.Name())
+	out, err := cmd.CombinedOutput()
+	if _, exit := err.(*exec.ExitError); !exit && result == "FAIL" {
+		t.Fatal(err)
 	}
-
-	simpleForAllFail := prop.ForAllNoShrink1(
-		gen.Const("const value"),
-		func(value interface{}) (interface{}, error) {
-			return value.(string) != "const value", nil
-		},
-	)
-
-	simpleResultFail := simpleForAllFail.Check(parameters)
-
-	if simpleResultFail.Status != gopter.TestFailed || simpleResultFail.Succeeded != 0 {
-		t.Errorf("Invalid simpleResultFail: %#v", simpleResultFail)
+	if err == nil && result == "FAIL" {
+		t.Error("go test should have exited with status code 1")
 	}
-
-	fail := prop.ForAllNoShrink(0)
-	result := fail(gopter.DefaultGenParameters())
-	if result.Status != gopter.PropError {
-		t.Errorf("Invalid result: %#v", result)
+	if found, err := regexp.Match(fmt.Sprintf("\\b%s: %s\\b", result, t.Name()), out); !found || err != nil {
+		t.Error("Test did not fail", err)
 	}
+	return out
+}
 
-	undecided := prop.ForAllNoShrink(func(a int) bool {
-		return true
-	}, gen.Int().SuchThat(func(interface{}) bool {
-		return false
-	}))
-	result = undecided(gopter.DefaultGenParameters())
-	if result.Status != gopter.PropUndecided {
-		t.Errorf("Invalid result: %#v", result)
+func TestForAllNoShrinkInvalidParam(t *testing.T) {
+	if found, err := regexp.Match("\\bFirst param of ForrAll has to be a func: int\\b", GoTestOutput(t, "FAIL")); !found || err != nil {
+		t.Error("Failed to panic", err)
+	}
+}
+
+func TestForAllNoShrinkUndecided(t *testing.T) {
+	if found, err := regexp.Match("\\bforall_no_shrink.go\\b", GoTestOutput(t, "SKIP")); !found || err != nil {
+		t.Error("Failed to panic", err)
 	}
 }

@@ -1,6 +1,7 @@
 package gopter_test
 
 import (
+	"testing"
 	"math"
 
 	"github.com/leanovate/gopter"
@@ -14,14 +15,14 @@ func Example_sqrt() {
 
 	properties := gopter.NewProperties(parameters)
 
-	properties.Property("greater one of all greater one", prop.ForAll(
+	properties.Property("greater one of all greater one", prop.ForAllT(
 		func(v float64) bool {
 			return math.Sqrt(v) >= 1
 		},
 		gen.Float64().SuchThat(func(x float64) bool { return x >= 1.0 }),
 	))
 
-	properties.Property("squared is equal to value", prop.ForAll(
+	properties.Property("squared is equal to value", prop.ForAllT(
 		func(v float64) bool {
 			r := math.Sqrt(v)
 			return math.Abs(r*r-v) < 1e-10*v
@@ -29,9 +30,15 @@ func Example_sqrt() {
 		gen.Float64().SuchThat(func(x float64) bool { return x >= 0.0 }),
 	))
 
-	// When using testing.T you might just use: properties.TestingRun(t)
-	properties.Run(gopter.ConsoleReporter(false))
+	testing.Main(
+		func(a, b string) (bool, error) { return true, nil },
+		[]testing.InternalTest{
+			{
+				Name: "Example_sqrt",
+				F:    properties.RunT,
+			},
+		}, nil, nil)
 	// Output:
-	// + greater one of all greater one: OK, passed 100 tests.
-	// + squared is equal to value: OK, passed 100 tests.
+	//
+	// PASS
 }

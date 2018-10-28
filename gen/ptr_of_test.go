@@ -37,14 +37,14 @@ func TestPtrOfFoo(t *testing.T) {
 	parameters := gopter.DefaultTestParameters()
 	properties := gopter.NewProperties(parameters)
 
-	properties.Property("PtrOf", prop.ForAll(
+	properties.Property("PtrOf", prop.ForAllT(
 		func(foo *Foo,
 		) bool {
 			return true
 		},
 		gen.PtrOf(GenFoo()),
 	))
-	properties.TestingRun(t)
+	properties.RunT(t)
 }
 
 func GenFoo() gopter.Gen {

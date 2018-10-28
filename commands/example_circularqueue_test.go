@@ -2,6 +2,7 @@ package commands_test
 
 import (
 	"fmt"
+	"testing"
 
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/commands"
@@ -232,25 +233,193 @@ func Example_circularqueue() {
 
 	properties.Property("circular buffer", commands.Prop(cbCommands))
 
-	// When using testing.T you might just use: properties.TestingRun(t)
-	properties.Run(gopter.ConsoleReporter(false))
+	// When using testing.T you might just use: properties.RunT(t)
+	testing.Main(
+		func(a, b string) (bool, error) { return true, nil },
+		[]testing.InternalTest{
+			{
+				Name: "Example_circularqueue",
+				F:    properties.RunT,
+			},
+		}, nil, nil)
 	// Output:
-	// ! circular buffer: Falsified after 96 passed tests.
-	// ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0)
-	//    Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0)
-	//    Put(0) Put(0) Put(0) Get Get Put(2) Get]
-	// ARG_0_ORIGINAL (85 shrinks): initialState=State(size=7, elements=[])
-	//    sequential=[Put(-1855365712) Put(-1591723498) Get Size Size
-	//    Put(-1015561691) Get Put(397128011) Size Get Put(1943174048) Size
-	//    Put(1309500770) Size Get Put(-879438231) Size Get Put(-1644094687) Get
-	//    Put(-1818606323) Size Put(488620313) Size Put(-1219794505)
-	//    Put(1166147059) Get Put(11390361) Get Size Put(-1407993944) Get Get Size
-	//    Put(1393923085) Get Put(1222853245) Size Put(2070918543) Put(1741323168)
-	//    Size Get Get Size Put(2019939681) Get Put(-170089451) Size Get Get Size
-	//    Size Put(-49249034) Put(1229062846) Put(642598551) Get Put(1183453167)
-	//    Size Get Get Get Put(1010460728) Put(6828709) Put(-185198587) Size Size
-	//    Get Put(586459644) Get Size Put(-1802196502) Get Size Put(2097590857) Get
-	//    Get Get Get Size Put(-474576011) Size Get Size Size Put(771190414) Size
-	//    Put(-1509199920) Get Put(967212411) Size Get Put(578995532) Size Get Size
-	//    Get]
+	//
+	// --- FAIL: Example_circularqueue (0.37s)
+	// 	--- FAIL: Example_circularqueue/circular_buffer (0.37s)
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Size Size Put(-1015561691) Get Put(397128011) Size Get Put(1943174048) Size Put(1309500770) Size Get Put(-879438231) Size Get Put(-1644094687) Get Put(-1818606323) Size Put(488620313) Size Put(-1219794505) Put(1166147059) Get Put(11390361) Get Size Put(-1407993944) Get Get Size Put(1393923085) Get Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get Put(-170089451) Size]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#05 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Size Size Put(-1015561691) Get Put(397128011) Size Get Put(1943174048) Size Put(1309500770) Size Get Put(-879438231) Size Get Put(-1644094687) Get Put(-1818606323) Size Put(488620313) Size Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get Put(-170089451) Size]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#13 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Size Size Put(-1015561691) Get Put(397128011) Put(1309500770) Size Get Put(-879438231) Size Get Put(-1644094687) Get Put(-1818606323) Size Put(488620313) Size Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get Put(-170089451) Size]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#38 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Size Size Put(-1015561691) Get Put(397128011) Put(1309500770) Size Get Put(-879438231) Size Get Put(-1644094687) Get Put(-1818606323) Size Put(488620313) Size Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#56 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Size Put(-1015561691) Get Put(397128011) Put(1309500770) Size Get Put(-879438231) Size Get Put(-1644094687) Get Put(-1818606323) Size Put(488620313) Size Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#74 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Size Get Put(-879438231) Size Get Put(-1644094687) Get Put(-1818606323) Size Put(488620313) Size Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#94 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Get Put(-879438231) Size Get Put(-1644094687) Get Put(-1818606323) Size Put(488620313) Size Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#117 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Size Put(488620313) Size Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#140 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Size Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#166 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#189 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#219 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Size Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#250 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#285 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(-1591723498) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#320 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(-1015561691) Get Put(397128011) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#355 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(397128011) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#390 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(1309500770) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#425 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(-879438231) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#460 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(-1644094687) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#495 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1818606323) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#531 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-909303162) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#567 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-454651581) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#603 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-227325791) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#639 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-113662896) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#675 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-56831448) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#711 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-28415724) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#747 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-14207862) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#783 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-7103931) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#819 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-3551966) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#855 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1775983) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#891 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-887992) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#927 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-443996) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#963 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-221998) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#999 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-110999) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1035 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-55500) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1071 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-27750) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1107 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-13875) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1143 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-6938) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1179 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-3469) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1215 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1735) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1251 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-868) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1287 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-434) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1323 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-217) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1359 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-109) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1395 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-55) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1431 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-28) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1467 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-14) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1503 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-7) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1539 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-4) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1575 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-2) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1611 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(488620313) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1647 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(1222853245) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1683 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(2070918543) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1719 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(1741323168) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1755 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(2019939681) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1792 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(1009969841) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1829 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(504984921) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1866 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(252492461) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1903 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(126246231) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1940 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(63123116) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#1977 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(31561558) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2014 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(15780779) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2051 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(7890390) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2088 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(3945195) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2125 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(1972598) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2162 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(986299) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2199 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(493150) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2236 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(246575) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2273 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(123288) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2310 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(61644) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2347 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(30822) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2384 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(15411) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2421 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(7706) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2458 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(3853) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2495 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(1927) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2532 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(964) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2569 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(482) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2606 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(241) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2643 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(121) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2680 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(61) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2717 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(31) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2754 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(16) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2791 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(8) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2828 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(4) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/shrink_0#2865 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(0) Put(0) Get Put(0) Get Put(0) Put(0) Get Put(0) Get Put(0) Get Put(-1) Put(0) Put(0) Put(0) Put(0) Get Get Put(2) Get]
+	// 		--- FAIL: Example_circularqueue/circular_buffer/original#96 (0.27s)
+	// 			check_condition_func.go:39: ARG_0: initialState=State(size=7, elements=[]) sequential=[Put(-1855365712) Put(-1591723498) Get Size Size Put(-1015561691) Get Put(397128011) Size Get Put(1943174048) Size Put(1309500770) Size Get Put(-879438231) Size Get Put(-1644094687) Get Put(-1818606323) Size Put(488620313) Size Put(-1219794505) Put(1166147059) Get Put(11390361) Get Size Put(-1407993944) Get Get Size Put(1393923085) Get Put(1222853245) Size Put(2070918543) Put(1741323168) Size Get Get Size Put(2019939681) Get Put(-170089451) Size Get Get Size Size Put(-49249034) Put(1229062846) Put(642598551) Get Put(1183453167) Size Get Get Get Put(1010460728) Put(6828709) Put(-185198587) Size Size Get Put(586459644) Get Size Put(-1802196502) Get Size Put(2097590857) Get Get Get Get Size Put(-474576011) Size Get Size Size Put(771190414) Size Put(-1509199920) Get Put(967212411) Size Get Put(578995532) Size Get Size Get]
+	// 		forall.go:64: Falsified after 96 passed tests.
+	// 		runner.go:71: Elapsed time: 372.877117ms
+	// 		runner.go:72: Completed with seed: 1234
+	// FAIL
 }

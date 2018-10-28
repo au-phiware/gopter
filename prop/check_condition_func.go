@@ -4,11 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-
-	"github.com/leanovate/gopter"
+	"testing"
 )
 
-func checkConditionFunc(check interface{}, numArgs int) (func([]reflect.Value) *gopter.PropResult, error) {
+func checkConditionFuncT(check interface{}, numArgs int) (func([]reflect.Value) func(*testing.T), error) {
 	checkVal := reflect.ValueOf(check)
 	checkType := checkVal.Type()
 
@@ -24,17 +23,23 @@ func checkConditionFunc(check interface{}, numArgs int) (func([]reflect.Value) *
 		return nil, fmt.Errorf("No more than 2 output parameters are allowed: %d", checkType.NumOut())
 	} else if checkType.NumOut() == 2 && !checkType.Out(1).Implements(typeOfError) {
 		return nil, fmt.Errorf("No 2 output has to be error: %v", checkType.Out(1).Kind())
-	} else if checkType.NumOut() == 2 {
-		return func(values []reflect.Value) *gopter.PropResult {
-			results := checkVal.Call(values)
-			if results[1].IsNil() {
-				return convertResult(results[0].Interface(), nil)
-			}
-			return convertResult(results[0].Interface(), results[1].Interface().(error))
-		}, nil
 	}
-	return func(values []reflect.Value) *gopter.PropResult {
+	return func(values []reflect.Value) func(*testing.T) {
+		var runner func(*testing.T)
 		results := checkVal.Call(values)
-		return convertResult(results[0].Interface(), nil)
+		if checkType.NumOut() == 1 || results[1].IsNil() {
+			runner = convertResultT(results[0].Interface(), nil)
+		} else {
+			runner = convertResultT(results[0].Interface(), results[1].Interface().(error))
+		}
+		return func(t *testing.T)  {
+			t.Helper()
+			defer func() {
+				for i, arg := range values {
+					t.Logf("ARG_%d: %v", i, arg)
+				}
+			}()
+			runner(t)
+		}
 	}, nil
 }

@@ -2,6 +2,7 @@ package prop_test
 
 import (
 	"strings"
+	"testing"
 	"unicode"
 
 	"github.com/leanovate/gopter"
@@ -23,20 +24,40 @@ func Example_invalidconcat() {
 
 	properties := gopter.NewProperties(parameters)
 
-	properties.Property("length is sum of lengths", prop.ForAll(
+	properties.Property("length is sum of lengths", prop.ForAllT(
 		func(a, b string) bool {
 			return MisimplementedConcat(a, b) == a+b
 		},
-		gen.Identifier(),
-		gen.Identifier(),
+		gen.Identifier().WithLabel("a"),
+		gen.Identifier().WithLabel("b"),
 	))
 
-	// When using testing.T you might just use: properties.TestingRun(t)
-	properties.Run(gopter.ConsoleReporter(false))
+	// When using testing.T you might just use: properties.RunT(t)
+	testing.Main(
+		func(a, b string) (bool, error) { return true, nil },
+		[]testing.InternalTest{
+			{
+				Name: "Example_invalidconcat",
+				F:    properties.RunT,
+			},
+		}, nil, nil)
 	// Output:
-	// ! length is sum of lengths: Falsified after 17 passed tests.
-	// ARG_0: bahbxh6
-	// ARG_0_ORIGINAL (2 shrinks): pkpbahbxh6
-	// ARG_1: l
-	// ARG_1_ORIGINAL (1 shrinks): dl
+	//
+	// --- FAIL: Example_invalidconcat (0.00s)
+	// 	--- FAIL: Example_invalidconcat/length_is_sum_of_lengths (0.00s)
+	// 		--- FAIL: Example_invalidconcat/length_is_sum_of_lengths/shrink_a#02 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: pbahbxh6
+	// 			check_condition_func.go:39: ARG_1: dl
+	// 		--- FAIL: Example_invalidconcat/length_is_sum_of_lengths/shrink_a#09 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: bahbxh6
+	// 			check_condition_func.go:39: ARG_1: dl
+	// 		--- FAIL: Example_invalidconcat/length_is_sum_of_lengths/shrink_b (0.00s)
+	// 			check_condition_func.go:39: ARG_0: bahbxh6
+	// 			check_condition_func.go:39: ARG_1: l
+	// 		--- FAIL: Example_invalidconcat/length_is_sum_of_lengths/original#17 (0.00s)
+	// 			check_condition_func.go:39: ARG_0: pkpbahbxh6
+	// 			check_condition_func.go:39: ARG_1: dl
+	// 		forall.go:64: Falsified after 17 passed tests.
+	// 		runner.go:72: Completed with seed: 1234
+	// FAIL
 }

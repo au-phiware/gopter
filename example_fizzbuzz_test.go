@@ -1,6 +1,7 @@
 package gopter_test
 
 import (
+	"testing"
 	"errors"
 	"math"
 	"strconv"
@@ -30,7 +31,7 @@ func fizzbuzz(number int) (string, error) {
 func Example_fizzbuzz() {
 	properties := gopter.NewProperties(nil)
 
-	properties.Property("Undefined for all <= 0", prop.ForAll(
+	properties.Property("Undefined for all <= 0", prop.ForAllT(
 		func(number int) bool {
 			result, err := fizzbuzz(number)
 			return err != nil && result == ""
@@ -38,7 +39,7 @@ func Example_fizzbuzz() {
 		gen.IntRange(math.MinInt32, 0),
 	))
 
-	properties.Property("Start with Fizz for all multiples of 3", prop.ForAll(
+	properties.Property("Start with Fizz for all multiples of 3", prop.ForAllT(
 		func(i int) bool {
 			result, err := fizzbuzz(i * 3)
 			return err == nil && strings.HasPrefix(result, "Fizz")
@@ -46,7 +47,7 @@ func Example_fizzbuzz() {
 		gen.IntRange(1, math.MaxInt32/3),
 	))
 
-	properties.Property("End with Buzz for all multiples of 5", prop.ForAll(
+	properties.Property("End with Buzz for all multiples of 5", prop.ForAllT(
 		func(i int) bool {
 			result, err := fizzbuzz(i * 5)
 			return err == nil && strings.HasSuffix(result, "Buzz")
@@ -54,7 +55,7 @@ func Example_fizzbuzz() {
 		gen.IntRange(1, math.MaxInt32/5),
 	))
 
-	properties.Property("Int as string for all non-divisible by 3 or 5", prop.ForAll(
+	properties.Property("Int as string for all non-divisible by 3 or 5", prop.ForAllT(
 		func(number int) bool {
 			result, err := fizzbuzz(number)
 			if err != nil {
@@ -68,11 +69,15 @@ func Example_fizzbuzz() {
 		}),
 	))
 
-	// When using testing.T you might just use: properties.TestingRun(t)
-	properties.Run(gopter.ConsoleReporter(false))
+	testing.Main(
+		func(a, b string) (bool, error) { return true, nil },
+		[]testing.InternalTest{
+			{
+				Name: "Example_fizzbuzz",
+				F:    properties.RunT,
+			},
+		}, nil, nil)
 	// Output:
-	// + Undefined for all <= 0: OK, passed 100 tests.
-	// + Start with Fizz for all multiples of 3: OK, passed 100 tests.
-	// + End with Buzz for all multiples of 5: OK, passed 100 tests.
-	// + Int as string for all non-divisible by 3 or 5: OK, passed 100 tests.
+	//
+	// PASS
 }

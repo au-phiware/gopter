@@ -1,13 +1,16 @@
 package gopter
 
 import (
+	"fmt"
+	"strconv"
 	"sync"
+	"testing"
 	"time"
 )
 
 type shouldStop func() bool
 
-type worker func(int, shouldStop) *TestResult
+type worker func(string, int, shouldStop) func(*testing.T)
 
 type runner struct {
 	sync.RWMutex
@@ -40,38 +43,34 @@ func (r *runner) mergeCheckResults(r1, r2 *TestResult) *TestResult {
 	return &result
 }
 
-func (r *runner) runWorkers() *TestResult {
-	var stopFlag Flag
-	defer stopFlag.Set()
-
-	start := time.Now()
+func (r *runner) runWorkersT() func(*testing.T) {
+	var runner func(*testing.T)
 	if r.parameters.Workers < 2 {
-		result := r.worker(0, stopFlag.Get)
-		result.Time = time.Since(start)
-		return result
-	}
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(r.parameters.Workers)
-	results := make(chan *TestResult, r.parameters.Workers)
-	combinedResult := make(chan *TestResult)
+		runner = r.worker("", 0, func() (stop bool) { return })
+	} else {
+		var waitGroup sync.WaitGroup
+		waitGroup.Add(r.parameters.Workers)
+		namef := fmt.Sprintf("worker%%0%dd", len(strconv.Itoa(r.parameters.Workers)))
 
-	go func() {
-		var combined *TestResult
-		for result := range results {
-			combined = r.mergeCheckResults(combined, result)
+		runner = func(t *testing.T) {
+			t.Helper()
+			var stopFlag Flag
+			defer stopFlag.Set()
+			for i := 0; i < r.parameters.Workers; i++ {
+				go func(runner func(*testing.T)) {
+					defer waitGroup.Done()
+					runner(t)
+				}(r.worker(fmt.Sprintf(namef, i), i, stopFlag.Get))
+			}
+			waitGroup.Wait()
 		}
-		combinedResult <- combined
-	}()
-	for i := 0; i < r.parameters.Workers; i++ {
-		go func(workerIdx int) {
-			defer waitGroup.Done()
-			results <- r.worker(workerIdx, stopFlag.Get)
-		}(i)
 	}
-	waitGroup.Wait()
-	close(results)
-
-	result := <-combinedResult
-	result.Time = time.Since(start)
-	return result
+	return func(t *testing.T) {
+		t.Helper()
+		defer func(start time.Time) {
+			t.Logf("Elapsed time: %s", time.Since(start))
+			t.Logf("Completed with seed: %d", r.parameters.Seed)
+		}(time.Now())
+		runner(t)
+	}
 }

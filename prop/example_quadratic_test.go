@@ -3,6 +3,7 @@ package prop_test
 import (
 	"errors"
 	"math"
+	"testing"
 
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/gen"
@@ -26,7 +27,7 @@ func Example_quadratic() {
 
 	properties := gopter.NewProperties(parameters)
 
-	properties.Property("solve quadratic", prop.ForAll(
+	properties.Property("solve quadratic", prop.ForAllT(
 		func(a, b, c float64) bool {
 			x1, x2, err := solveQuadratic(a, b, c)
 			if err != nil {
@@ -39,7 +40,7 @@ func Example_quadratic() {
 		gen.Float64(),
 	))
 
-	properties.Property("solve quadratic with resonable ranges", prop.ForAll(
+	properties.Property("solve quadratic with resonable ranges", prop.ForAllT(
 		func(a, b, c float64) bool {
 			x1, x2, err := solveQuadratic(a, b, c)
 			if err != nil {
@@ -52,15 +53,12 @@ func Example_quadratic() {
 		gen.Float64Range(-1e8, 1e8),
 	))
 
-	// When using testing.T you might just use: properties.TestingRun(t)
-	properties.Run(gopter.ConsoleReporter(false))
-	// Output:
-	// ! solve quadratic: Falsified after 0 passed tests.
-	// ARG_0: -1.4667384313385178e-05
-	// ARG_0_ORIGINAL (187 shrinks): -1.0960555181801604e+51
-	// ARG_1: 0
-	// ARG_1_ORIGINAL (1 shrinks): -1.1203884793568249e+96
-	// ARG_2: 6.481285637227244e+10
-	// ARG_2_ORIGINAL (905 shrinks): 1.512647219322138e+281
-	// + solve quadratic with resonable ranges: OK, passed 100 tests.
+	testing.Main(
+		func(a, b string) (bool, error) { return true, nil },
+		[]testing.InternalTest{
+			{
+				Name: "Example_sqrt",
+				F:    properties.RunT,
+			},
+		}, nil, nil)
 }

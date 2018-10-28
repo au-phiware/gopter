@@ -3,6 +3,7 @@ package arbitrary_test
 import (
 	"errors"
 	"math/cmplx"
+	"testing"
 
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/arbitrary"
@@ -34,7 +35,7 @@ func Example_quadratic() {
 
 	properties := gopter.NewProperties(parameters)
 
-	properties.Property("Quadratic equations can be solved (as pointer)", arbitraries.ForAll(
+	properties.Property("Quadratic equations can be solved (as pointer)", arbitraries.ForAllT(
 		func(quadratic *QudraticEquation) bool {
 			x1, x2, err := quadratic.Solve()
 			if err != nil {
@@ -44,7 +45,7 @@ func Example_quadratic() {
 			return cmplx.Abs(quadratic.Eval(x1)) < 1e-5 && cmplx.Abs(quadratic.Eval(x2)) < 1e-5
 		}))
 
-	properties.Property("Quadratic equations can be solved (as struct)", arbitraries.ForAll(
+	properties.Property("Quadratic equations can be solved (as struct)", arbitraries.ForAllT(
 		func(quadratic QudraticEquation) bool {
 			x1, x2, err := quadratic.Solve()
 			if err != nil {
@@ -54,7 +55,7 @@ func Example_quadratic() {
 			return cmplx.Abs(quadratic.Eval(x1)) < 1e-5 && cmplx.Abs(quadratic.Eval(x2)) < 1e-5
 		}))
 
-	properties.Property("Quadratic equations can be solved alternative", arbitraries.ForAll(
+	properties.Property("Quadratic equations can be solved alternative", arbitraries.ForAllT(
 		func(a, b, c complex128) bool {
 			quadratic := &QudraticEquation{
 				A: a,
@@ -69,10 +70,16 @@ func Example_quadratic() {
 			return cmplx.Abs(quadratic.Eval(x1)) < 1e-5 && cmplx.Abs(quadratic.Eval(x2)) < 1e-5
 		}))
 
-	// When using testing.T you might just use: properties.TestingRun(t)
-	properties.Run(gopter.ConsoleReporter(false))
+	// When using testing.T you might just use: properties.RunT(t)
+	testing.Main(
+		func(a, b string) (bool, error) { return true, nil },
+		[]testing.InternalTest{
+			{
+				Name: "Example_quadratic",
+				F:    properties.RunT,
+			},
+		}, nil, nil)
 	// Output:
-	// + Quadratic equations can be solved (as pointer): OK, passed 100 tests.
-	// + Quadratic equations can be solved (as struct): OK, passed 100 tests.
-	// + Quadratic equations can be solved alternative: OK, passed 100 tests.
+	//
+	// PASS
 }
