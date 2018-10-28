@@ -2,6 +2,7 @@ package gopter
 
 import (
 	"math/rand"
+	"testing"
 	"time"
 )
 
@@ -21,7 +22,7 @@ type TestParameters struct {
 
 // DefaultTestParameterWithSeeds creates reasonable default Parameters for most cases based on a fixed RNG-seed
 func DefaultTestParametersWithSeed(seed int64) *TestParameters {
-	return &TestParameters{
+	params := &TestParameters{
 		MinSuccessfulTests: 100,
 		MinSize:            0,
 		MaxSize:            100,
@@ -31,6 +32,12 @@ func DefaultTestParametersWithSeed(seed int64) *TestParameters {
 		Workers:            1,
 		MaxDiscardRatio:    5,
 	}
+	if testing.Short() {
+		params.MaxSize /= 10
+		params.MaxShrinkCount /= 10
+		params.MinSuccessfulTests /= 10
+	}
+	return params
 }
 
 // DefaultTestParameterWithSeeds creates reasonable default Parameters for most cases with an undefined RNG-seed

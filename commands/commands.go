@@ -74,8 +74,8 @@ func (p *ProtoCommands) InitialPreCondition(state State) bool {
 }
 
 // Prop creates a gopter.Prop from Commands
-func Prop(commands Commands) gopter.Prop {
-	return prop.ForAll(func(actions *actions) (*gopter.PropResult, error) {
+func Prop(commands Commands) gopter.PropT {
+	return prop.ForAllT(func(actions *actions) (*gopter.PropResult, error) {
 		systemUnderTest := commands.NewSystemUnderTest(actions.initialStateProvider())
 		defer commands.DestroySystemUnderTest(systemUnderTest)
 

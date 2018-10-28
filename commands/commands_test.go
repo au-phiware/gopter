@@ -101,12 +101,5 @@ func (c *counterCommands) GenCommand(state commands.State) gopter.Gen {
 }
 
 func TestCommands(t *testing.T) {
-	parameters := gopter.DefaultTestParameters()
-
-	prop := commands.Prop(&counterCommands{})
-
-	result := prop.Check(parameters)
-	if !result.Passed() {
-		t.Errorf("Invalid result: %v", result)
-	}
+	commands.Prop(&counterCommands{}).CheckT(t)
 }

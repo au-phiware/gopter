@@ -1,37 +1,54 @@
 package prop
 
 import (
-	"fmt"
+	"testing"
 
 	"github.com/leanovate/gopter"
 )
 
-func convertResult(result interface{}, err error) *gopter.PropResult {
+func convertResultT(result interface{}, err error) func(*testing.T) {
 	if err != nil {
-		return &gopter.PropResult{
-			Status: gopter.PropError,
-			Error:  err,
+		return func(t *testing.T) {
+			t.Fatal(err)
 		}
 	}
-	switch result.(type) {
+	switch r := result.(type) {
 	case bool:
-		if result.(bool) {
-			return &gopter.PropResult{Status: gopter.PropTrue}
+		if r {
+			return func(t *testing.T) {}
 		}
-		return &gopter.PropResult{Status: gopter.PropFalse}
+		return func(t *testing.T) { t.Fail() }
 	case string:
-		if result.(string) == "" {
-			return &gopter.PropResult{Status: gopter.PropTrue}
+		if r == "" {
+			return func(t *testing.T) {}
 		}
-		return &gopter.PropResult{
-			Status: gopter.PropFalse,
-			Labels: []string{result.(string)},
+		return func(t *testing.T) {
+			t.Error(r)
 		}
 	case *gopter.PropResult:
-		return result.(*gopter.PropResult)
+		return func(t *testing.T) {
+			if len(r.Labels) > 0 {
+				t.Log(r.Labels)
+			}
+			if r.Error != nil {
+				t.Log(r.Error)
+			}
+			switch r.Status {
+			case gopter.PropFalse:
+				t.Fail()
+			case gopter.PropError:
+				t.FailNow()
+			case gopter.PropUndecided:
+				t.SkipNow()
+			case gopter.PropProof:
+				// TODO: t.SkipNow()
+			case gopter.PropTrue:
+			}
+		}
+	case func(*testing.T):
+		return r
 	}
-	return &gopter.PropResult{
-		Status: gopter.PropError,
-		Error:  fmt.Errorf("Invalid check result: %#v", result),
+	return func(t *testing.T) {
+		t.Fatalf("Invalid check result: %#v", result)
 	}
 }

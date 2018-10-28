@@ -1,22 +1,22 @@
 package gopter
 
 import (
-	"fmt"
 	"math"
 	"runtime/debug"
+	"testing"
 )
 
 // Prop represent some kind of property that (drums please) can and should be checked
-type Prop func(*GenParameters) *PropResult
+type PropT func(*GenParameters) func(*testing.T)
 
 // SaveProp creates s save property by handling all panics from an inner property
-func SaveProp(prop Prop) Prop {
-	return func(genParams *GenParameters) (result *PropResult) {
+func SavePropT(prop PropT) PropT {
+	return func(genParams *GenParameters) (result func(*testing.T)) {
 		defer func() {
 			if r := recover(); r != nil {
-				result = &PropResult{
-					Status: PropError,
-					Error:  fmt.Errorf("Check paniced: %v %s", r, debug.Stack()),
+				stack := debug.Stack()
+				result = func(t *testing.T) {
+					t.Fatalf("Check paniced: %v %s", r, stack)
 				}
 			}
 		}()
@@ -25,8 +25,20 @@ func SaveProp(prop Prop) Prop {
 	}
 }
 
+func RunT(t *testing.T, runner func(t *testing.T), recovery func(t *testing.T)) {
+	// TODO: guard against t.Parallel()
+	t.Run("", func(t *testing.T) {
+		defer recovery(t)
+		runner(t)
+	})
+}
+
+func (prop PropT) CheckT(t *testing.T) {
+	prop.CheckWithParametersT(DefaultTestParameters())(t)
+}
+
 // Check the property using specific parameters
-func (prop Prop) Check(parameters *TestParameters) *TestResult {
+func (prop PropT) CheckWithParametersT(parameters *TestParameters) func(*testing.T) {
 	iterations := math.Ceil(float64(parameters.MinSuccessfulTests) / float64(parameters.Workers))
 	sizeStep := float64(parameters.MaxSize-parameters.MinSize) / (iterations * float64(parameters.Workers))
 
@@ -36,76 +48,49 @@ func (prop Prop) Check(parameters *TestParameters) *TestResult {
 		MaxShrinkCount: parameters.MaxShrinkCount,
 		Rng:            parameters.Rng,
 	}
+
 	runner := &runner{
 		parameters: parameters,
-		worker: func(workerIdx int, shouldStop shouldStop) *TestResult {
+		worker: func(workerIdx int, shouldStop shouldStop) func(*testing.T) {
 			var n int
 			var d int
+			var status testStatus
 
 			isExhaused := func() bool {
 				return n+d > parameters.MinSuccessfulTests &&
 					1.0+float64(parameters.Workers*n)*parameters.MaxDiscardRatio < float64(d)
 			}
 
-			for !shouldStop() && n < int(iterations) {
-				size := float64(parameters.MinSize) + (sizeStep * float64(workerIdx+(parameters.Workers*(n+d))))
-				propResult := prop(genParameters.WithSize(int(size)))
+			return func(t *testing.T) {
+				for !shouldStop() &&
+					n < int(iterations) &&
+					status == TestPassed {
+					size := float64(parameters.MinSize) + (sizeStep * float64(workerIdx+(parameters.Workers*(n+d))))
+					runner := prop(genParameters.WithSize(int(size)))
 
-				switch propResult.Status {
-				case PropUndecided:
-					d++
-					if isExhaused() {
-						return &TestResult{
-							Status:    TestExhausted,
-							Succeeded: n,
-							Discarded: d,
+					RunT(t, runner, func(t *testing.T) {
+						if r := recover(); r != nil {
+							t.Errorf("Check paniced: %v %s", r, debug.Stack())
 						}
-					}
-				case PropTrue:
-					n++
-				case PropProof:
-					n++
-					return &TestResult{
-						Status:    TestProved,
-						Succeeded: n,
-						Discarded: d,
-						Labels:    propResult.Labels,
-						Args:      propResult.Args,
-					}
-				case PropFalse:
-					return &TestResult{
-						Status:    TestFailed,
-						Succeeded: n,
-						Discarded: d,
-						Labels:    propResult.Labels,
-						Args:      propResult.Args,
-					}
-				case PropError:
-					return &TestResult{
-						Status:    TestError,
-						Succeeded: n,
-						Discarded: d,
-						Labels:    propResult.Labels,
-						Error:     propResult.Error,
-						Args:      propResult.Args,
-					}
+						if t.Failed() {
+							status = TestFailed
+						} else if t.Skipped() {
+							d++
+							if isExhaused() {
+								status = TestExhausted
+							}
+						} else {
+							n++
+						}
+						// TODO: how to establish Proof?
+					})
 				}
-			}
 
-			if isExhaused() {
-				return &TestResult{
-					Status:    TestExhausted,
-					Succeeded: n,
-					Discarded: d,
+				if isExhaused() {
+					status = TestExhausted
 				}
-			}
-			return &TestResult{
-				Status:    TestPassed,
-				Succeeded: n,
-				Discarded: d,
 			}
 		},
 	}
-
-	return runner.runWorkers()
+	return runner.runWorkersT()
 }

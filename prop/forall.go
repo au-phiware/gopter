@@ -1,12 +1,22 @@
 package prop
 
 import (
+	"runtime/debug"
 	"reflect"
+	"testing"
 
 	"github.com/leanovate/gopter"
 )
 
 var typeOfError = reflect.TypeOf((*error)(nil)).Elem()
+
+func CheckForAll(condition interface{}, gens ...gopter.Gen) func(*testing.T) {
+	return ForAllT(condition, gens...).CheckT
+}
+
+func CheckForAllWithParameters(parameters *gopter.TestParameters, condition interface{}, gens ...gopter.Gen) func(*testing.T) {
+	return ForAllT(condition, gens...).CheckWithParametersT(parameters)
+}
 
 /*
 ForAll creates a property that requires the check condition to be true for all values, if the
@@ -15,15 +25,19 @@ condition falsiies the generated values will be shrinked.
 "condition" has to be a function with the same number of parameters as the provided
 generators "gens". The function may return a simple bool (true means that the
 condition has passed), a string (empty string means that condition has passed),
-a *PropResult, or one of former combined with an error.
+a *PropResult, a func(*testing.T) or one of former combined with an error.
 */
-func ForAll(condition interface{}, gens ...gopter.Gen) gopter.Prop {
-	callCheck, err := checkConditionFunc(condition, len(gens))
+func ForAllT(condition interface{}, gens ...gopter.Gen) gopter.PropT {
+	callCheck, err := checkConditionFuncT(condition, len(gens))
 	if err != nil {
-		return ErrorProp(err)
+		return func(genParams *gopter.GenParameters) func(*testing.T) {
+			return func(t *testing.T) {
+				t.Fatal(err)
+			}
+		}
 	}
 
-	return gopter.SaveProp(func(genParams *gopter.GenParameters) *gopter.PropResult {
+	return gopter.SavePropT(func(genParams *gopter.GenParameters) func(*testing.T) {
 		genResults := make([]*gopter.GenResult, len(gens))
 		values := make([]reflect.Value, len(gens))
 		var ok bool
@@ -32,92 +46,73 @@ func ForAll(condition interface{}, gens ...gopter.Gen) gopter.Prop {
 			genResults[i] = result
 			values[i], ok = result.RetrieveAsValue()
 			if !ok {
-				return &gopter.PropResult{
-					Status: gopter.PropUndecided,
+				return func(t *testing.T) {
+					t.Skip()
 				}
 			}
 		}
-		result := callCheck(values)
-		if result.Success() {
-			for i, genResult := range genResults {
-				result = result.AddArgs(gopter.NewPropArg(genResult, 0, values[i].Interface(), values[i].Interface()))
-			}
-		} else {
-			for i, genResult := range genResults {
-				nextResult, nextValue := shrinkValue(genParams.MaxShrinkCount, genResult, values[i].Interface(), result,
-					func(v interface{}) *gopter.PropResult {
-						shrinkedOne := make([]reflect.Value, len(values))
-						copy(shrinkedOne, values)
-						if v == nil {
-							shrinkedOne[i] = reflect.Zero(values[i].Type())
+		runner := callCheck(values)
+		return func(t *testing.T) {
+			gopter.RunT(t, runner, func(subT *testing.T) {
+				if r := recover(); r != nil {
+					subT.Fatalf("Check paniced: %v %s", r, debug.Stack())
+				}
+				if subT.Failed() {
+					for i, genResult := range genResults {
+						nextValue := shrinkValueT(genParams.MaxShrinkCount, genResult, values[i].Interface(),
+							func(v interface{}) bool {
+								shrinkedOne := make([]reflect.Value, len(values))
+								copy(shrinkedOne, values)
+								if v == nil {
+									shrinkedOne[i] = reflect.Zero(values[i].Type())
+								} else {
+									shrinkedOne[i] = reflect.ValueOf(v)
+								}
+								var success bool
+								runner := callCheck(shrinkedOne)
+								gopter.RunT(t, runner, func(t *testing.T) {
+									success = !t.Failed()
+								})
+								// TODO: Report PropArgs
+								return success
+							})
+						if nextValue == nil {
+							values[i] = reflect.Zero(values[i].Type())
 						} else {
-							shrinkedOne[i] = reflect.ValueOf(v)
+							values[i] = reflect.ValueOf(nextValue)
 						}
-						return callCheck(shrinkedOne)
-					})
-				result = nextResult
-				if nextValue == nil {
-					values[i] = reflect.Zero(values[i].Type())
-				} else {
-					values[i] = reflect.ValueOf(nextValue)
+					}
 				}
-			}
+			})
 		}
-		return result
 	})
 }
 
-// ForAll1 legacy interface to be removed in the future
-func ForAll1(gen gopter.Gen, check func(v interface{}) (interface{}, error)) gopter.Prop {
-	checkFunc := func(v interface{}) *gopter.PropResult {
-		return convertResult(check(v))
-	}
-	return gopter.SaveProp(func(genParams *gopter.GenParameters) *gopter.PropResult {
-		genResult := gen(genParams)
-		value, ok := genResult.Retrieve()
-		if !ok {
-			return &gopter.PropResult{
-				Status: gopter.PropUndecided,
-			}
-		}
-		result := checkFunc(value)
-		if result.Success() {
-			return result.AddArgs(gopter.NewPropArg(genResult, 0, value, value))
-		}
-
-		result, _ = shrinkValue(genParams.MaxShrinkCount, genResult, value, result, checkFunc)
-		return result
-	})
-}
-
-func shrinkValue(maxShrinkCount int, genResult *gopter.GenResult, origValue interface{},
-	firstFail *gopter.PropResult, check func(interface{}) *gopter.PropResult) (*gopter.PropResult, interface{}) {
-	lastFail := firstFail
+func shrinkValueT(maxShrinkCount int, genResult *gopter.GenResult, origValue interface{},
+	check func(interface{}) bool) interface{} {
 	lastValue := origValue
 
 	shrinks := 0
 	shrink := genResult.Shrinker(lastValue).Filter(genResult.Sieve)
-	nextResult, nextValue := firstFailure(shrink, check)
-	for nextResult != nil && shrinks < maxShrinkCount {
+	nextValue, ok := firstFailureT(shrink, check)
+	for ok && shrinks < maxShrinkCount {
 		shrinks++
 		lastValue = nextValue
-		lastFail = nextResult
 
 		shrink = genResult.Shrinker(lastValue).Filter(genResult.Sieve)
-		nextResult, nextValue = firstFailure(shrink, check)
+		nextValue, ok = firstFailureT(shrink, check)
 	}
 
-	return lastFail.WithArgs(firstFail.Args).AddArgs(gopter.NewPropArg(genResult, shrinks, lastValue, origValue)), lastValue
+	return lastValue
 }
 
-func firstFailure(shrink gopter.Shrink, check func(interface{}) *gopter.PropResult) (*gopter.PropResult, interface{}) {
-	value, ok := shrink()
+func firstFailureT(shrink gopter.Shrink, check func(interface{}) bool) (value interface{}, ok bool) {
+	value, ok = shrink()
 	for ok {
-		result := check(value)
-		if !result.Success() {
-			return result, value
+		if !check(value) {
+			return
 		}
 		value, ok = shrink()
 	}
-	return nil, nil
+	return
 }

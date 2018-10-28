@@ -1,7 +1,10 @@
+// +build !fail
+
 package prop_test
 
 import (
 	"math"
+	"regexp"
 	"testing"
 
 	"github.com/leanovate/gopter"
@@ -12,21 +15,14 @@ import (
 func TestSqrt(t *testing.T) {
 	properties := gopter.NewProperties(nil)
 
-	properties.Property("greater one of all greater one", prop.ForAll(
+	properties.Property("greater one of all greater one", prop.ForAllT(
 		func(v float64) bool {
 			return math.Sqrt(v) >= 1
 		},
 		gen.Float64Range(1, math.MaxFloat64),
 	))
 
-	properties.Property("greater one of all greater one alternative", prop.ForAll1(
-		gen.Float64Range(1, math.MaxFloat64),
-		func(v interface{}) (interface{}, error) {
-			return math.Sqrt(v.(float64)) >= 1, nil
-		},
-	))
-
-	properties.Property("squared is equal to value", prop.ForAll(
+	properties.Property("squared is equal to value", prop.ForAllT(
 		func(v float64) bool {
 			r := math.Sqrt(v)
 			return math.Abs(r*r-v) < 1e-10*v
@@ -34,30 +30,17 @@ func TestSqrt(t *testing.T) {
 		gen.Float64Range(0, math.MaxFloat64),
 	))
 
-	properties.Property("squared is equal to value alternative", prop.ForAll1(
-		gen.Float64Range(0, math.MaxFloat64),
-		func(v interface{}) (interface{}, error) {
-			s := v.(float64)
-			r := math.Sqrt(s)
-			return math.Abs(r*r-s) < 1e-10*s, nil
-		},
-	))
+	properties.RunT(t)
+}
 
-	properties.TestingRun(t)
-
-	fail := prop.ForAll(0)
-	result := fail(gopter.DefaultGenParameters())
-	if result.Status != gopter.PropError {
-		t.Errorf("Invalid result: %#v", result)
+func TestForAllInvalidParam(t *testing.T) {
+	if found, err := regexp.Match("\\bFirst param of ForrAll has to be a func: int\\b", GoTestOutput(t, "FAIL")); !found || err != nil {
+		t.Error("Failed to panic", err)
 	}
+}
 
-	undecided := prop.ForAll(func(a int) bool {
-		return true
-	}, gen.Int().SuchThat(func(interface{}) bool {
-		return false
-	}))
-	result = undecided(gopter.DefaultGenParameters())
-	if result.Status != gopter.PropUndecided {
-		t.Errorf("Invalid result: %#v", result)
+func TestForAllUndecided(t *testing.T) {
+	if found, err := regexp.Match("\\bforall.go\\b", GoTestOutput(t, "SKIP")); !found || err != nil {
+		t.Error("Failed to panic", err)
 	}
 }
